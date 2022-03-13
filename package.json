@@ -19,6 +19,7 @@
   "homepage": "https://github.com/juancruzsoto/cBirthdayBot#readme",
   "dependencies": {
     "dotenv": "^16.0.0",
+    "firebase": "^9.6.8",
     "telegraf": "^4.7.0"
   },
   "devDependencies": {
