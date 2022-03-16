@@ -3,20 +3,20 @@ import "firebase/compat/firestore";
 import "firebase/compat/auth";
 import { Telegraf } from "telegraf";
 import dotenv from "dotenv";
-import express from 'express';
+import express from "express";
 
 const app = express();
 
 app.use(express.json());
 
-app.get('/', (req, res) => {
-    res.send('Hola Mundo desde Express.');
+app.get("/", (req, res) => {
+  res.send("Hola Mundo desde Express.");
 });
 
 const port = process.env.PORT || 5000;
 app.listen(port, () => {
-    console.log(`Escuchando en el puerto ${port}...`);
-})
+  console.log(`Escuchando en el puerto ${port}...`);
+});
 
 const firebaseConfig = {
   apiKey: "AIzaSyBLPic1kXD-AxUXDQZHqLADMtPWwxNFEp0",
@@ -37,8 +37,6 @@ const auth = firebase.auth;
 dotenv.config({ path: ".env" });
 
 const bot = new Telegraf(process.env.TOKEN_TELEGRAM);
-
-// console.log(db)
 
 const loadData = async (uid) => {
   const response = await db.collection(`${uid}/cumpleaños/personas`).get();
@@ -84,27 +82,14 @@ const loadData = async (uid) => {
       return -1;
     }
   });
-  // console.log(event);
   return event;
 };
 
-// console.log(await loadData("gFx7y0skAHW4JvVaa51oyTY1wBe2"), "Asdasdassaddsa");
-
-const helpMessage =
-  "Listado de comandos disponibles anashei \n /start \n /reminderON \n /reminderOff";
-
 bot.start((ctx) => {
   ctx.reply(
-    "Hola, para iniciar ingresa /login y sigue las instrucciones: \n /help - Visualizar lista de comandos"
+    `Hola ${ctx.message.from.first_name}, para iniciar ingresa a https://cbirthday.herokuapp.com/telegram y sigue las instrucciones: \n /help - Visualizar lista de comandos`
   );
-  console.log(ctx);
 });
-
-console.log(
-  new Date(
-    new Date(new Date().setDate(new Date().getDate() + 1)).setHours(0, 0, 0, 0)
-  ).getTime() - new Date().getTime()
-);
 
 const recordatorio = (tiempo, ctx) => {
   setTimeout(async () => {
@@ -122,7 +107,9 @@ const recordatorio = (tiempo, ctx) => {
           ) {
             ctx.reply(`HOY ES CUMPLEAÑOS DE: ${bd.nombre}`);
             arr.length = index + 1;
-          }else{ctx.reply("prueba")}
+          } else {
+            ctx.reply("prueba");
+          }
           if (fa > aux) {
             arr.length = index + 1;
           }
@@ -147,7 +134,13 @@ bot.hears("/reminderON", async (ctx) => {
       });
       recordatorio(
         new Date(
-          new Date(new Date().setDate(new Date().getDate() + 1)).setHours(0,0,0,0)).getTime() - new Date().getTime(),
+          new Date(new Date().setDate(new Date().getDate() + 1)).setHours(
+            0,
+            0,
+            0,
+            0
+          )
+        ).getTime() - new Date().getTime(),
         ctx
       );
     }
@@ -164,17 +157,74 @@ bot.hears("/reminderOff", async (ctx) => {
     if (reminder.data().recordatorio === 0) {
       ctx.reply("Recordatorios ya se encuentran desactivados");
     } else {
-    db.doc(`usersTelegram/${ctx.message.chat.id}`).set({
-      ...reminder.data(),
-      recordatorio: 0,
-    });
-    ctx.reply("Recordatorios Desactivados")}
+      db.doc(`usersTelegram/${ctx.message.chat.id}`).set({
+        ...reminder.data(),
+        recordatorio: 0,
+      });
+      ctx.reply("Recordatorios Desactivados");
+    }
   } else {
     ctx.reply(
       "Primero debe enlazar su cuenta con el bot, siga las instrucciones: https://cbirthday.herokuapp.com/telegram"
     );
   }
 });
+
+bot.hears("/nextBirthday", async (ctx) => {
+  let reminder = await db.doc(`usersTelegram/${ctx.message.chat.id}`).get();
+  if (reminder.data()) {
+    let bdays = await loadData(reminder.data().token);
+    let aux = new Date();
+    bdays.forEach((bd, index, arr) => {
+      let fa = bd.fecha.split("-");
+      fa = new Date(+fa[0], fa[1] - 1, +fa[2]);
+      if (bd.fecha > aux.toISOString().slice(0, -14)) {
+        ctx.reply(
+          `El proximo cumpleaños es de ${bd.nombre} el ${fa.toLocaleDateString(
+            "es-AR",
+            { weekday: "long", year: "numeric", month: "long", day: "numeric" }
+          )}`
+        );
+        arr.length = index + 1;
+      }
+    });
+  } else {
+    ctx.reply(
+      "Primero debe enlazar su cuenta con el bot, siga las instrucciones: https://cbirthday.herokuapp.com/telegram"
+    );
+  }
+});
+
+bot.hears("/lastBirthday", async (ctx) => {
+  let reminder = await db.doc(`usersTelegram/${ctx.message.chat.id}`).get();
+  if (reminder.data()) {
+    let bdays = await loadData(reminder.data().token);
+    let aux = new Date();
+    let fb 
+    bdays.forEach((bd, index, arr) => {
+      let fa = bd.fecha.split("-");
+      fa = new Date(+fa[0], fa[1] - 1, +fa[2]);
+      if (bd.fecha > aux.toISOString().slice(0, -14)) {
+        ctx.reply(
+          `El último cumpleaños fue de ${fb[1]} el ${fb[0].toLocaleDateString(
+            "es-AR",
+            { weekday: "long", year: "numeric", month: "long", day: "numeric" }
+          )}`
+        );
+        arr.length = index + 1;
+      }else{
+        fb = [fa,bd.nombre]
+      }
+    });
+  } else {
+    ctx.reply(
+      "Primero debe enlazar su cuenta con el bot, siga las instrucciones: https://cbirthday.herokuapp.com/telegram"
+    );
+  }
+});
+
+const helpMessage =
+  "Listado de comandos disponibles: \n /reminderON - Activar Recordatorios \n /reminderOff - Desactivar Recordatorios \n /nextBirthday - Ver proximo cumpleaños \n /lastBirthday - Ver último cumpleaños \n /disconnect - Desenlazar cuenta vinculada.";
 
 bot.help((ctx) => {
   ctx.reply(helpMessage);
@@ -184,22 +234,38 @@ const regex = new RegExp("^(/connect_[a-zA-Z0-9_]*)$");
 
 // Math.random().toString(36).substr(2)
 bot.hears(regex, async (ctx) => {
-  let reminder = await db
-    .doc(`usersTelegram/${ctx.message.chat.id1515234}`)
-    .get();
-  if (reminder.data()) {
+  let reminder = await db.doc(`usersTelegram/${ctx.message.chat.id}`).get();
+  if (!reminder.data()) {
     let data = ctx.message.text.split("_");
-    console.log(data);
     db.collection(`${data[1]}/cumpleaños/telegram`)
       .get()
       .then((response) => {
         response.forEach(async (persona) => {
           if (persona.data().token === data[2]) {
-            db.doc(`usersTelegram/${ctx.message.chat.id}`).set({
-              token: data[1],
-              recordatorio: 0,
-            });
-            ctx.reply("Cuenta enlazada con exito");
+            db.doc(`usersTelegram/${ctx.message.chat.id}`)
+              .set({
+                token: data[1],
+                recordatorio: 0,
+              })
+              .then(() => {
+                ctx.reply("Cuenta enlazada con exito");
+                db.collection(`${data[1]}/cumpleaños/telegram`)
+                  .get()
+                  .then((response) => {
+                    response.forEach((persona) => {
+                      db.doc(
+                        `${data[1]}/cumpleaños/telegram/${persona.id}`
+                      ).update({ token: Math.random().toString(36).substr(2) });
+                    });
+                  })
+                  .catch((e) => {
+                    console.log(e);
+                  });
+              })
+              .catch((e) => {
+                ctx.reply("Hubo un error en el servidor");
+                console.log(e);
+              });
           } else {
             ctx.reply("No se pudo enlazar la cuenta, reingrese el comando");
           }
@@ -210,6 +276,22 @@ bot.hears(regex, async (ctx) => {
       });
   } else {
     ctx.reply("Su usuario ya se encuentra enlazado con una cuenta.");
+  }
+});
+
+bot.hears("/disconnect", async (ctx) => {
+  let reminder = await db.doc(`usersTelegram/${ctx.message.chat.id}`).get();
+  if (reminder.data()) {
+    db.doc(`usersTelegram/${ctx.message.chat.id}`)
+      .delete()
+      .then(() => {
+        ctx.reply("Cuenta desvinculada con exito.");
+      })
+      .catch(() => {
+        ctx.reply("Ocurrió un error, intentelo de nuevo");
+      });
+  } else {
+    ctx.reply("No se encuentra enlazado a ninguna cuenta.");
   }
 });
 
