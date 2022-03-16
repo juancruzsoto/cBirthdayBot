@@ -3,20 +3,20 @@ import "firebase/compat/firestore";
 import "firebase/compat/auth";
 import { Telegraf } from "telegraf";
 import dotenv from "dotenv";
-import express from 'express';
+// import express from 'express';
 
-const app = express();
+// const app = express();
 
-app.use(express.json());
+// app.use(express.json());
 
-app.get('/', (req, res) => {
-    res.send('Hola Mundo desde Express.');
-});
+// app.get('/', (req, res) => {
+//     res.send('Hola Mundo desde Express.');
+// });
 
-const port = process.env.PORT || 3000;
-app.listen(port, () => {
-    console.log(`Escuchando en el puerto ${port}...`);
-})
+// const port = process.env.PORT || 3000;
+// app.listen(port, () => {
+//     console.log(`Escuchando en el puerto ${port}...`);
+// })
 
 const firebaseConfig = {
   apiKey: "AIzaSyBLPic1kXD-AxUXDQZHqLADMtPWwxNFEp0",
