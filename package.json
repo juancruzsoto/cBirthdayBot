@@ -20,11 +20,12 @@
   "homepage": "https://github.com/juancruzsoto/cBirthdayBot#readme",
   "dependencies": {
     "dotenv": "^16.0.0",
+    "express": "^4.17.3",
     "firebase": "^9.6.8",
     "telegraf": "^4.7.0"
   },
   "devDependencies": {
     "nodemon": "^2.0.15"
   },
-  "type":"module"
+  "type": "module"
 }
